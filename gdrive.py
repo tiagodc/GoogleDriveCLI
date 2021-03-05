@@ -114,27 +114,6 @@ def threadDownloads(file_obj, mirror, root_dir):
 # def threadUpload(drive, parent_hash, file):    
 #     uploadFile(drive, parent_hash, file)
 #     return file    
-        
-# drive = authenticate()
-# client = Client(processes=False, dashboard_address=":10000")
-# print(f"dashboard: {client.dashboard_link}")
-# threads = [threadUpload(drive, REMOTE_DIR_ID, local_dir + i) for i in files]
-# threads = dask.persist(*threads)
-# progress(threads)
-# client.close()
-
-## download
-# files = getFiles(drive, REMOTE_DIR_ID)
-
-# myargs = {'creationOptions':["TILED=NO"]}
-# for i,f in enumerate(files):
-#     print(f"file {i+1} of {len(files)}", end='\r')
-#     fcp = deepcopy(f)
-#     fpath = downloadFile(drive, fcp, os.path.join(LOCAL_DIR, f['title']))    
-#     if fpath is not None:
-#         gdal.Translate(re.sub(r'\.tif$', '_trans.tif', fpath), fpath, **myargs)
-#         os.unlink(fpath)
-#     del fcp
 
 def str2bool(v):
     if isinstance(v, bool):
