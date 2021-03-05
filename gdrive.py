@@ -93,8 +93,10 @@ def downloadFile(file_obj, mirror=True, root_dir=None):
     else:        
         local = os.path.join(root_dir, file_obj['title'])
     
+    file_clone = deepcopy(file_obj)
     try:
-        file_obj.GetContentFile(local)
+        file_clone.GetContentFile(local)
+        file_clone = None
     except:
         return
 
