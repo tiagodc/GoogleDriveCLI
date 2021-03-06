@@ -166,7 +166,7 @@ def uploadFile(drive, local_file, parent_hash=None):
     
     file = drive.CreateFile(meta)
     file.SetContentFile(local_file)    
-    file['title'] = os.path.split(local_file)[1]
+    file['title'] = os.path.split(local_file)[-1]
     file.Upload({'supportsAllDrives': True})
     return {'id':file['id'], 'name':file['title']}
 
@@ -185,7 +185,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Download or upload files from/to your google drive from the terminal")    
+    parser = argparse.ArgumentParser(description="Download or upload entire file directories from/to your google drive on the terminal")    
     parser.add_argument('-d','--directory', required=True, type=str, help='Local directory path')
     parser.add_argument('-p','--parent', required=False, type=str, help="Google Drive folder to use (leave blank to use the drive's root)")   
     parser.add_argument('-s','--shared-drive', required=False, type=str, help='Shared drive ID')
@@ -228,5 +228,36 @@ if __name__ == '__main__':
         procs = dask.persist(*procs)
         progress(procs)
         client.close()
+    
     else:
-        print('pending')
+        if args.recursive:
+            files = localDirTree(args.directory, args.format)
+        else:
+            files = [f for f in os.listdir(args.directory) if os.path.isfile( os.path.join(args.directory,f) )]
+            if args.format is not None:
+                files = [f for f in files if f.endswith(args.format)]
+
+        if len(files) == 0:
+            sys.exit('No files to upload.')
+
+        if args.threaded:
+            client = Client()
+        else:
+            client = Client(processes=False, n_workers=1, threads_per_worker=1)
+        
+        print(f"dashboard: {client.dashboard_link}")
+
+        procs = []
+        if args.mirror:
+            folder_map = driveDirTree(drive, opts, files)
+            for file in files:
+                d,f = os.path.split(file)
+                parent_hash = args.parent if d == '' else folder_map[d]['id']
+                procs.append( threadUpload(drive, os.path.join(args.directory, file), parent_hash) )
+        else:
+            for file in files:
+                procs.append( threadUpload(drive, os.path.join(args.directory, file), args.parent) )
+
+        procs = dask.persist(*procs)
+        progress(procs)
+        client.close()
