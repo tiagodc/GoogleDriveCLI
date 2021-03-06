@@ -191,7 +191,7 @@ if __name__ == '__main__':
     parser.add_argument('-d','--directory', required=True, type=str, help='Local directory path')
     parser.add_argument('-p','--parent', required=False, type=str, help="Google Drive folder to use (leave blank to use the drive's root)")   
     parser.add_argument('-s','--shared-drive', required=False, type=str, help='Shared drive ID')
-    parser.add_argument('-f','--format', type=str, required=False, help='File format to query')
+    parser.add_argument('-f','--format', type=str, required=False, help='Full file name or format to query')
     parser.add_argument('-l','--list', type=str2bool, default=False, const=True, nargs='?', help='Only print remote files without downloading/uploading')
     parser.add_argument('-u','--upload', type=str2bool, default=False, const=True, nargs='?', help='Upload files from local directory to google drive')
     parser.add_argument('-t','--threaded', type=str2bool, default=False, const=True, nargs='?', help='Use multiple threads (parallel)')
