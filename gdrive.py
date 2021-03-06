@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import argparse, os, dask, sys
+import argparse, os, dask, sys, re
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 from copy import deepcopy
@@ -18,15 +18,19 @@ class GlobalOpts:
         self.format = file_format
         self.recursive = recursive
     
-    def query(self):
+    def query(self, folders=False):
         q = 'trashed = false'
         if self.parent is not None:
             q += f" and '{self.parent}' in parents"
-        if self.format is not None and not self.recursive:
+        
+        if folders:
+            q += f" and mimeType = '{self.folder_mimetype}'"
+        elif self.format is not None and not self.recursive:
             q += f" and title contains '{self.format}'"
+
         return q
     
-    def get(self):
+    def get(self, folders=False):
         opts = {}
         
         if self.shared is not None:
@@ -35,13 +39,14 @@ class GlobalOpts:
             opts["includeItemsFromAllDrives"] = True
             opts["supportsAllDrives"] = True
         
-        opts['q'] = self.query()
+        opts['q'] = self.query(folders)
         return opts
     
-    def copy(self, parent_folder_obj):
+    def copy(self, parent_folder_obj=None):
         child = deepcopy(self)
-        child.parent = parent_folder_obj['id']
-        child.dir = os.path.join(child.dir, parent_folder_obj['title'])
+        if parent_folder_obj is not None:
+            child.parent = parent_folder_obj['id']
+            child.dir = os.path.join(child.dir, parent_folder_obj['title'])
         return child
 
 def authenticate(credentials_path = "mycreds.json"):
@@ -59,6 +64,8 @@ def authenticate(credentials_path = "mycreds.json"):
 
     drive = GoogleDrive(gauth)
     return drive
+
+## download functions
 
 def getFiles(drive, opts):
     return drive.ListFile(opts).GetList()
@@ -103,19 +110,69 @@ def downloadFile(file_obj, mirror=True, root_dir=None):
 @dask.delayed
 def threadDownloads(file_obj, mirror, root_dir):
     downloadFile(file_obj, mirror, root_dir)
-    return file_obj['id']
+    return {'id':file_obj['id'], 'name':file_obj['title']}
 
-# def uploadFile(drive, parent_hash, local_file):
-#     file = drive.CreateFile({'uploadType':'resumable', 'parents': [{'id': parent_hash}]} )
-#     file.SetContentFile(local_file)    
-#     file['title'] = local_file.split('/')[-1]
-#     file.Upload({'supportsAllDrives': True})
-#     return file
+## upload functions
 
-# @dask.delayed
-# def threadUpload(drive, parent_hash, file):    
-#     uploadFile(drive, parent_hash, file)
-#     return file    
+def localDirTree(local_dir, format=None):
+    sub_dirs = []
+    for root, dirs, files in os.walk(local_dir):
+        for name in files:
+            if format is not None and re.match(f'.*{format}$', name) is None:
+                continue            
+            temp = os.path.join(root, name)
+            temp = re.sub(f"^{local_dir}/*",'',temp)
+            sub_dirs.append(temp)
+    return sub_dirs
+
+def driveDirTree(drive, opts, local_files):
+    keys = list(set([os.path.split(i)[0] for i in local_files]))
+    keys = [i for i in keys if i != '']
+
+    id_map = {}
+
+    for k in keys:
+        temp_opts = opts.copy()
+        fs = getFiles(drive, opts.get(True))
+        ft = [f['title'] for f in fs]
+        fpath = ''
+        for j in k.split(os.path.sep):
+            fpath = os.path.join(fpath, j)
+            if fpath in id_map:
+                obj = deepcopy(id_map[fpath])
+            elif j in ft:
+                obj = fs[ft.index(j)]              
+            else:
+                meta = {'title': j, 'mimeType': GlobalOpts.folder_mimetype}
+                if temp_opts.parent is not None:
+                    meta['parents'] = [{'id':temp_opts.parent}]
+                obj = drive.CreateFile(meta)
+                obj.Upload({'supportsAllDrives': True})
+                fs = []
+                ft = []
+            
+            id_map[fpath] = obj
+            temp_opts = temp_opts.copy(obj)
+            if not fs == ft == []:
+                fs = getFiles(drive, temp_opts.get(True))
+                ft = [f['title'] for f in fs]
+    
+    return id_map
+
+def uploadFile(drive, local_file, parent_hash=None):
+    meta = {'uploadType':'resumable'}
+    if parent_hash is not None:
+        meta['parents'] = [{'id': parent_hash}]
+    
+    file = drive.CreateFile(meta)
+    file.SetContentFile(local_file)    
+    file['title'] = os.path.split(local_file)[1]
+    file.Upload({'supportsAllDrives': True})
+    return {'id':file['id'], 'name':file['title']}
+
+@dask.delayed
+def threadUpload(drive, file, parent_hash=None):    
+    return uploadFile(drive, file, parent_hash)    
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -161,7 +218,7 @@ if __name__ == '__main__':
             sys.exit('No files to download.')
 
         if args.threaded:
-            client = Client(processes=False)
+            client = Client()
         else:
             client = Client(processes=False, n_workers=1, threads_per_worker=1)
         
