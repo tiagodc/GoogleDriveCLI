@@ -143,9 +143,11 @@ def driveDirTree(drive, opts, local_files):
             elif j in ft:
                 obj = fs[ft.index(j)]              
             else:
-                meta = {'title': j, 'mimeType': GlobalOpts.folder_mimetype}
+                meta = {'title': j, 'mimeType': GlobalOpts.folder_mimetype}                
                 if temp_opts.parent is not None:
                     meta['parents'] = [{'id':temp_opts.parent}]
+                elif temp_opts.shared is not None:
+                    meta['parents'] = [{'id':temp_opts.shared}]
                 obj = drive.CreateFile(meta)
                 obj.Upload({'supportsAllDrives': True})
                 fs = []
@@ -252,11 +254,11 @@ if __name__ == '__main__':
             folder_map = driveDirTree(drive, opts, files)
             for file in files:
                 d,f = os.path.split(file)
-                parent_hash = args.parent if d == '' else folder_map[d]['id']
+                parent_hash = args.parent or args.shared_drive if d == '' else folder_map[d]['id']
                 procs.append( threadUpload(drive, os.path.join(args.directory, file), parent_hash) )
         else:
             for file in files:
-                procs.append( threadUpload(drive, os.path.join(args.directory, file), args.parent) )
+                procs.append( threadUpload(drive, os.path.join(args.directory, file), args.parent or args.shared_drive) )
 
         procs = dask.persist(*procs)
         progress(procs)
