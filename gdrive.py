@@ -189,11 +189,11 @@ def str2bool(v):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Download or upload entire file directories from/to your google drive on the terminal")    
     parser.add_argument('-d','--directory', required=True, type=str, help='Local directory path')
-    parser.add_argument('-p','--parent', required=False, type=str, help="Google Drive folder to use (leave blank to use the drive's root)")   
+    parser.add_argument('-p','--parent', required=False, type=str, help="Google Drive folder ID from/to where files will be download/uploaded (leave blank to use the drive's root)")   
     parser.add_argument('-s','--shared-drive', required=False, type=str, help='Shared drive ID')
-    parser.add_argument('-f','--format', type=str, required=False, help='Full file name or format to query')
-    parser.add_argument('-l','--list', type=str2bool, default=False, const=True, nargs='?', help='Only print remote files without downloading/uploading')
-    parser.add_argument('-u','--upload', type=str2bool, default=False, const=True, nargs='?', help='Upload files from local directory to google drive (ignore this to download)')
+    parser.add_argument('-f','--format', type=str, required=False, help='Full file name or format to filter')
+    parser.add_argument('-l','--list-only', type=str2bool, default=False, const=True, nargs='?', help='Only print files without downloading/uploading')
+    parser.add_argument('-u','--upload', type=str2bool, default=False, const=True, nargs='?', help='Upload files from local directory to google drive instead of downloading from it (to download leave it blank)')
     parser.add_argument('-t','--threaded', type=str2bool, default=False, const=True, nargs='?', help='Use multiple threads (parallel)')
     parser.add_argument('-r','--recursive', type=str2bool, default=False, const=True, nargs='?', help='List files from subdirectories recursively')
     parser.add_argument('-m','--mirror', type=str2bool, default=False, const=True, nargs='?', help='Mirror full paths between google drive and local directory')
@@ -218,6 +218,12 @@ if __name__ == '__main__':
 
         if len(files) == 0:
             sys.exit('No files to download.')
+        
+        if args.list_only:
+            print('\nFiles to download:\n')
+            for f in files:
+                print(f['local_path'])
+            sys.exit()
 
         if args.threaded:
             client = Client()
@@ -241,6 +247,12 @@ if __name__ == '__main__':
 
         if len(files) == 0:
             sys.exit('No files to upload.')
+
+        if args.list_only:
+            print('\nFiles to upload:\n')
+            for f in files:
+                print(os.path.join(args.directory,f))
+            sys.exit()
 
         if args.threaded:
             client = Client()
