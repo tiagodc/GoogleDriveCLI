@@ -1,20 +1,20 @@
-Create virtualenv
+## Set up a python virtualenv
 
-with pip
+##### with pip
 ```
 pip install virtualenv
 python -m virtualenv myenv
 . myenv/bin/activate
 
 ## to leave
-# deactivate
+deactivate
 ```
 
-or with conda
+##### with conda
 ```
 conda create -n myenv
 conda activate myenv
 
 ## to leave
-# conda deactivate
+conda deactivate
 ```

@@ -193,16 +193,16 @@ if __name__ == '__main__':
     parser.add_argument('-s','--shared-drive', required=False, type=str, help='Shared drive ID')
     parser.add_argument('-f','--format', type=str, required=False, help='Full file name or format to query')
     parser.add_argument('-l','--list', type=str2bool, default=False, const=True, nargs='?', help='Only print remote files without downloading/uploading')
-    parser.add_argument('-u','--upload', type=str2bool, default=False, const=True, nargs='?', help='Upload files from local directory to google drive')
+    parser.add_argument('-u','--upload', type=str2bool, default=False, const=True, nargs='?', help='Upload files from local directory to google drive (ignore this to download)')
     parser.add_argument('-t','--threaded', type=str2bool, default=False, const=True, nargs='?', help='Use multiple threads (parallel)')
     parser.add_argument('-r','--recursive', type=str2bool, default=False, const=True, nargs='?', help='List files from subdirectories recursively')
     parser.add_argument('-m','--mirror', type=str2bool, default=False, const=True, nargs='?', help='Mirror full paths between google drive and local directory')
     parser.add_argument('-c','--credentials', type=str, default='mycreds.json', help='Path to your credentials file (generated via browser authentication)')
-    parser.add_argument('-a','--auth', type=str, default='client_secrets.json', help="Path to your client secrets file (downloaded from the google developer's console)")
+    parser.add_argument('-a','--auth', type=str, required=False, help="Path to your client secrets file (downloaded from the google developer's console)")
 
     args = parser.parse_args()
     
-    if args.auth is not None and args.credentials is None:
+    if args.auth is not None:
         secrets = 'client_secrets.json'
         if not os.path.isfile(secrets):
             shutil.copy(args.auth, secrets)
