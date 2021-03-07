@@ -4,6 +4,13 @@ A comand line interface to download/upload files to your google drive from the c
 
 ### Setting up
 
+Clone or donwload this repository and go to its folder from the terminal:
+
+```
+git clone https://github.com/tiagodc/GoogleDriveCLI.git
+cd GoogleDriveCLI
+```
+
 Be sure to have python 3.x installed and install all dependencies (or setup a [virtualenv](docs/virtualenv.md)):
 
 ```
