@@ -1,6 +1,6 @@
 ## Google Drive CLI
 
-A comand line interface to download/upload files to your google drive from the command line. Built with Python 3 (v3.6.9) on top of [PyDrive](https://github.com/googleworkspace/PyDrive) and the [Google Drive API](https://developers.google.com/drive/api/v3/about-sdk), as of March/2021.
+A command line interface to download/upload files to your google drive from the command line. Built with Python 3 (v3.6.9) on top of [PyDrive](https://github.com/googleworkspace/PyDrive) and the [Google Drive API](https://developers.google.com/drive/api/v3/about-sdk), as of March/2021.
 
 ### Setting up
 
