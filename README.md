@@ -21,7 +21,7 @@ conda install --file requirements.txt
 
 Activate your google developer account and enable OAuth authentication. For a quick guide [click here](docs/oauth.md).
 
-If it's your first time using the API and you don't have a credentials file, download the `client_secrets.json` file from your developer account (also in the [guide](docs/oauth)). Then try to download/upload some files from/to your drive:
+If it's your first time using the API and you don't have a credentials file, download the `client_secrets.json` file from your developer account (also in the [guide](docs/oauth.md). Then try to download/upload some files from/to your drive:
 
 ```
 python gdrive.py --directory path/to/local/directory --parent #yourGoogleDriveFolderIdHash --auth path/to/client_secrets.json --credentials path/to/creentials.json [...]
