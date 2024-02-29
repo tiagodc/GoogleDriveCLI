@@ -206,8 +206,7 @@ if __name__ == '__main__':
         secrets = 'client_secrets.json'
         if not os.path.isfile(secrets):
             shutil.copy(args.auth, secrets)
-            drive = authenticate(args.credentials)
-            os.unlink(secrets)
+        drive = authenticate(args.credentials)
     else:
         drive = authenticate(args.credentials)
     
